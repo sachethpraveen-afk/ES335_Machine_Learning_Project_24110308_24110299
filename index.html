@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Can process sensors warn us before a unit fails final test?</title>
+<style>
+:root{--bg:#e8f0ec;--grid:rgba(24,70,58,.07);--panel:#fff;--ink:#14202b;--muted:#566574;--line:#d3dbe3;--faint:#aab6c2;--fa:#6b7c8d;--fail:#d9541e;--accent:#1d6fa5;color-scheme:light dark}
+@media (prefers-color-scheme:dark){:root{--bg:#0c1917;--grid:rgba(255,255,255,.045);--panel:#18222b;--ink:#e8edf2;--muted:#9aa8b6;--line:#2b3946;--faint:#4a5b69;--fa:#8fa2b4;--fail:#ff8a57;--accent:#6bb6ea}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background-color:var(--bg);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:28px 28px;color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:940px;margin:0 auto;padding:calc(32px + env(safe-area-inset-top,0px)) 20px calc(64px + env(safe-area-inset-bottom,0px))}
+h1{font-size:clamp(1.65rem,4.6vw,2.5rem);line-height:1.12;letter-spacing:-.02em;margin:0 0 .6rem;max-width:24ch}
+h2{font-size:1.3rem;line-height:1.25;letter-spacing:-.01em;margin:2.6rem 0 .6rem}
+p,li{max-width:68ch}
+.lede{font-size:1.1rem;color:var(--muted);max-width:60ch;margin:0 0 1.4rem}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px}
+.ctl{display:grid;gap:12px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+button{font:inherit;font-size:.92rem;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:7px;padding:6px 12px;cursor:pointer}
+button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+@media (prefers-color-scheme:dark){button[aria-pressed="true"]{color:#0b1218}}
+button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+label{font-weight:600}
+input[type=range]{width:100%;accent-color:var(--accent);height:28px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.9rem;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:18px 0 6px}
+.stats b{display:block;font-size:1.7rem;line-height:1.1;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.stats span{font-size:.85rem;color:var(--muted)}
+.cm{border-collapse:collapse;font-size:.9rem;margin:10px 0 0;font-variant-numeric:tabular-nums}
+.cm th,.cm td{border:1px solid var(--line);padding:5px 12px;text-align:center}
+.cm th{font-weight:600;color:var(--muted);background:transparent}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.85rem;color:var(--muted);margin:16px 0 10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.c{display:inline-block;width:14px;height:14px;flex:none}
+.c.p{border-radius:3px;border:1.5px solid var(--faint)}
+.c.p.on{background:var(--fa);border-color:var(--fa)}
+.c.f{border-radius:50%;border:2.5px solid var(--fail)}
+.c.f.on{background:var(--fail)}
+.day{display:grid;grid-template-columns:52px 1fr;gap:2px 10px;padding:7px 0;border-top:1px solid var(--line)}
+.dl{font-weight:600;font-size:.9rem;padding-top:1px}
+.cells{display:flex;flex-wrap:wrap;gap:3px}
+.ds{grid-column:2;font-size:.8rem;color:var(--muted)}
+table.res{border-collapse:collapse;width:100%;font-size:.93rem;font-variant-numeric:tabular-nums;margin:.4rem 0 .8rem}
+table.res th,table.res td{border-bottom:1px solid var(--line);padding:8px 8px 8px 0;text-align:left;vertical-align:top}
+table.res th{color:var(--muted);font-weight:600}
+.scroll{overflow-x:auto}
+a{color:var(--accent)}
+footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--line);color:var(--muted);font-size:.9rem}
+.note{color:var(--muted);font-size:.9rem}
+nav{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.9rem;margin:0 0 1.4rem}
+h2{scroll-margin-top:12px}h3{font-size:1.02rem;margin:1.6rem 0 .3rem}
+.glance{display:grid;gap:8px;margin-bottom:1.2rem}.glance p{margin:0}
+.bar{display:flex;height:16px;border-radius:4px;overflow:hidden;margin:6px 0 2px;border:1px solid var(--line)}
+.bar i{display:block;height:100%}.b1{background:var(--accent)}.b2{background:var(--faint)}.b3{background:var(--fail)}
+.bl{font-size:.82rem;color:var(--muted);margin:0 0 12px}
+table.res td:first-child,table.res th:first-child{padding-left:0}
+.hl td{font-weight:600}
+</style>
+</head>
+<body>
+<main>
+<h1>Can process sensors warn us before a unit fails final test?</h1>
+<p class="lede">A time-aware study of the SECOM semiconductor dataset: what we asked, what the data looked like, how we built and judged the models, and what the evidence does and does not support.</p>
+<nav aria-label="Sections"><a href="#question">Question</a><a href="#data">Data</a><a href="#prep">Preprocessing</a><a href="#models">Models</a><a href="#eval">Evaluation</a><a href="#results">Results</a><a href="#errors">Error analysis</a><a href="#limits">Limitations</a><a href="#repo">Repository</a></nav>
+
+<section class="panel glance" aria-label="Summary">
+<p><b>Question.</b> Can the process-sensor readings recorded for a production unit predict whether it fails final testing?</p>
+<p><b>Answer.</b> Weakly, yes. Our chosen model ranks failures better than random (PR-AUC 0.227 against 0.054 for random), but with only 17 test failures the size of the gain is very uncertain.</p>
+<p><b>Try it.</b> <a href="#board-section">Flag the top N units and see who it catches.</a></p>
+</section>
+
+<h2 id="question">1. The question and what a row is</h2>
+<ul>
+<li><b>One row</b> is one production unit, described by 590 sensor readings and a timestamp.</li>
+<li><b>Target:</b> failed (1) or passed (0) the final quality test.</li>
+<li><b>When a prediction is made:</b> after the process sensors are recorded and before final testing, so only those readings are used.</li>
+<li><b>Claim limit:</b> we claim predictive association within this one historical dataset, not that any sensor causes failures or that it transfers to other fabs.</li>
+</ul>
+
+<h2 id="data">2. The data</h2>
+<div class="scroll"><table class="res">
+<tr><th>Source</th><td>SECOM dataset, <a href="https://archive.ics.uci.edu/dataset/179/secom">UCI Machine Learning Repository</a> (CC BY 4.0). Public; two files: sensor values and labels with timestamps.</td></tr>
+<tr><th>Size</th><td>1,567 units × 590 sensors; 104 failures and 1,463 passes (6.6% fail); 19 July to 17 October 2008.</td></tr>
+<tr><th>Variables</th><td>590 anonymized numeric sensors (f0 to f589), a pass/fail label, a timestamp. Sensor meanings are not documented.</td></tr>
+</table></div>
+<h3>Quality issues that shaped our choices</h3>
+<p class="bl" style="margin:0">Sensors by missingness</p>
+<div class="bar" role="img" aria-label="52 sensors complete, 510 partly missing, 28 more than half missing"><i class="b1" style="width:8.8%"></i><i class="b2" style="width:86.4%"></i><i class="b3" style="width:4.7%"></i></div>
+<p class="bl">52 complete, 510 partly missing, 28 more than half missing</p>
+<p class="bl" style="margin:0">Units by outcome</p>
+<div class="bar" role="img" aria-label="93.4 percent pass, 6.6 percent fail"><i class="b2" style="width:93.4%"></i><i class="b3" style="width:6.6%"></i></div>
+<p class="bl">1,463 passed, 104 failed</p>
+<ul>
+<li><b>Heavy missing data.</b> 538 of 590 sensors have gaps and every unit has at least one. Some sensors go missing together (for example f157, f158, f292 and f293 are all 91.2% missing), which suggests a measurement step that was not recorded.</li>
+<li><b>Constant sensors.</b> 116 sensors never change and carry no information.</li>
+<li><b>Mixed scales.</b> Readings range from about 1 to over 3,000.</li>
+<li><b>Rare failures.</b> Always guessing “pass” is right 93% of the time, so accuracy is not informative.</li>
+<li><b>Drift.</b> The weekly failure rate falls from above 20% in the earliest weeks to a few percent later, so the process changes over time.</li>
+</ul>
+
+<h2 id="prep">3. Preprocessing and why</h2>
+<p>Every step is learned from training data only, inside one scikit-learn pipeline that is refit on each training block, so nothing from validation or test data leaks in.</p>
+<div class="scroll"><table class="res">
+<tr><th>Step</th><th>Why</th></tr>
+<tr><td>Fill gaps with the training median</td><td>Every unit has a gap, so we cannot drop units. The median resists extreme sensor values.</td></tr>
+<tr><td>Drop constant sensors</td><td>They carry no information (116 of 590).</td></tr>
+<tr><td>Standardize each sensor</td><td>Scales differ by orders of magnitude; unscaled sensors would dominate the model and the selection scores.</td></tr>
+<tr><td>Keep the top k sensors by an F-score</td><td>590 sensors against 87 development failures invites fitting coincidences. We chose k = 10 (see below).</td></tr>
+<tr><td>Class weights, not resampling</td><td>Mistakes on the rare failures count more during training; no synthetic units were created.</td></tr>
+</table></div>
+
+<h2 id="models">4. Baseline and models compared</h2>
+<ul>
+<li><b>Baseline: majority class.</b> Gives every unit the same score, so its PR-AUC equals the failure rate. It matched the failure rate in every fold, which confirms the code is correct.</li>
+<li><b>Logistic regression</b> (our chosen model). A weighted sum of the selected sensors turned into a failure probability; a penalty (C = 0.01) keeps weights small so it does not memorize noise. Simple, stable with few failures, and the weights can be inspected.</li>
+<li><b>Random forest.</b> Many decision trees on random subsets, averaged (300 trees, k = 100). It can learn interactions between sensors that a weighted sum cannot.</li>
+</ul>
+<p><b>Selection rule, fixed before testing:</b> prefer the simpler model unless the complex one is clearly better, and among settings within 0.01 of the best mean gain take the simplest. This gave logistic regression, C = 0.01, k = 10.</p>
+<p>Gain over random (PR-AUC minus the failure rate of that fold), by fold of the development data. Positive means better than random.</p>
+<div class="scroll"><table class="res">
+<tr><th>Model</th><th>F1 (26)</th><th>F2 (10)</th><th>F3 (6)</th><th>F4 (6)</th><th>F5 (10)</th><th>Mean</th></tr>
+<tr><td>Logistic regression, all 590 sensors</td><td>−0.011</td><td>0.081</td><td>0.009</td><td>0.027</td><td>−0.006</td><td>0.020</td></tr>
+<tr class="hl"><td>Logistic regression, top 10</td><td>0.010</td><td>0.074</td><td>0.090</td><td>−0.005</td><td>0.110</td><td>0.056</td></tr>
+<tr><td>Logistic regression, top 30</td><td>0.008</td><td>0.044</td><td>0.169</td><td>−0.006</td><td>0.050</td><td>0.053</td></tr>
+<tr><td>Logistic regression, top 100</td><td>−0.011</td><td>0.172</td><td>0.093</td><td>0.012</td><td>0.027</td><td>0.058</td></tr>
+<tr><td>Logistic regression, top 100, C = 0.1</td><td>−0.010</td><td>0.167</td><td>0.176</td><td>0.016</td><td>0.029</td><td>0.075</td></tr>
+<tr><td>Random forest, top 100</td><td>0.040</td><td>0.102</td><td>0.010</td><td>0.321</td><td>0.002</td><td>0.095</td></tr>
+</table></div>
+<p class="bl">Numbers in brackets are validation failures in that fold. The first four rows use C = 0.01.</p>
+<ul>
+<li>Selecting sensors helped (mean gain 0.020 to about 0.055), but the choice of k and C made no consistent difference: one fold moved by 0.09 from a small setting change, more than the gaps between settings.</li>
+<li>The forest’s higher mean comes almost entirely from fold 4, which has 6 failures, four of them within five hours. It won 2 of 5 folds, so we kept the simpler model.</li>
+</ul>
+
+<h2 id="eval">5. How we evaluated</h2>
+<p>Units were split by time, not at random, because the process drifts and a real prediction is always about future units. The last 20% was locked away and used once.</p>
+<div class="scroll"><table class="res">
+<tr><th>Split</th><th>Units</th><th>Failures</th><th>Failure rate</th><th>Period</th></tr>
+<tr><td>Train</td><td>940</td><td>76</td><td>8.1%</td><td>19 Jul to 20 Sep</td></tr>
+<tr><td>Validation</td><td>313</td><td>11</td><td>3.5%</td><td>20 Sep to 2 Oct</td></tr>
+<tr><td>Test</td><td>314</td><td>17</td><td>5.4%</td><td>2 Oct to 17 Oct</td></tr>
+</table></div>
+<p>Eleven validation failures is too few to choose between models, because one unit shifts recall by about 9 points. So we merged train and validation into a development set (87 failures) and compared models with <b>expanding-window time-series cross-validation</b>: always train on the past, validate on the next block.</p>
+<div class="scroll"><table class="res">
+<tr><th>Fold</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr>
+<tr><td>Train units (failures)</td><td>213 (29)</td><td>421 (55)</td><td>629 (65)</td><td>837 (71)</td><td>1,045 (77)</td></tr>
+<tr><td>Validation units (failures)</td><td>208 (26)</td><td>208 (10)</td><td>208 (6)</td><td>208 (6)</td><td>208 (10)</td></tr>
+</table></div>
+<ul>
+<li><b>PR-AUC</b> summarizes the trade-off between catching failures (recall) and false alarms (precision) over all thresholds. Random ranking scores about the failure rate, so we always report the <b>gain over that baseline</b>.</li>
+<li><b>Recall in the top 10%</b> of units answers a practical question: if engineers can inspect only that many units, how many failures do they find?</li>
+<li><b>Uncertainty:</b> a bootstrap that resamples whole days (2,000 rounds), because failures arrive in bursts and resampling single units would be falsely confident.</li>
+</ul>
+
+<h2 id="results">6. Results</h2>
+<div class="scroll"><table class="res">
+<tr><th>Test set (314 units, 17 failures)</th><th>PR-AUC</th><th>Gain over random (0.054)</th><th>95% interval for gain</th><th>Failures in top 32</th></tr>
+<tr class="hl"><td>Logistic regression (chosen)</td><td>0.227</td><td>+0.173</td><td>0.017 to 0.45</td><td>6 of 17</td></tr>
+<tr><td>Random forest</td><td>0.107</td><td>+0.053</td><td>0.018 to 0.121</td><td>3 of 17</td></tr>
+</table></div>
+<p>Both beat random, but the interval for logistic regression starts barely above zero. The models cannot be told apart: the interval for the difference in gain is −0.376 to 0.031. Logistic regression at 58 flagged units reaches 9 of 17 failures, but that threshold was picked using the test labels, so it is a best case. The board below lets you explore the trade-off.</p>
+<span id="board-section"></span>
+<noscript><p>This page needs JavaScript for the interactive board.</p></noscript>
+
+<h3 style="margin-top:0">Explore the test results</h3>
+<section class="panel" aria-label="Interactive board">
+  <div class="ctl">
+    <div class="seg" role="group" aria-label="Model">
+      <button id="m-lr" aria-pressed="true">Logistic regression (our chosen model)</button>
+      <button id="m-rf" aria-pressed="false">Random forest (comparison)</button>
+    </div>
+    <label for="n">Flag the top <output id="nv" for="n">32</output> of <span id="ntot">314</span> units</label>
+    <input id="n" type="range" min="0" max="314" step="1" value="32">
+    <div class="presets" id="presets">Jump to:
+      <button data-n="10">Top 10</button>
+      <button data-n="32">Top 10%</button>
+      <button data-n="58">Top 58</button>
+      <button data-n="100">Top 100</button>
+      <button data-n="314">All units</button>
+    </div>
+  </div>
+
+  <div class="stats" aria-live="polite">
+    <div><b id="s-rec">-</b><span id="s-rec2">of failures caught</span></div>
+    <div><b id="s-prec">-</b><span>of flagged units actually failed</span></div>
+    <div><b id="s-fa">-</b><span>false alarms</span></div>
+    <div><b id="s-lift">-</b><span id="s-lift2">better than flagging at random</span></div>
+  </div>
+
+  <div class="scroll"><table class="cm" aria-label="Confusion matrix">
+    <tr><th></th><th>Flagged</th><th>Not flagged</th></tr>
+    <tr><th>Failed final test</th><td id="c-tp">-</td><td id="c-fn">-</td></tr>
+    <tr><th>Passed final test</th><td id="c-fp">-</td><td id="c-tn">-</td></tr>
+  </table></div>
+
+  <div class="legend" aria-label="Legend">
+    <span><i class="c f on"></i>failure caught</span>
+    <span><i class="c f"></i>failure missed</span>
+    <span><i class="c p on"></i>false alarm</span>
+    <span><i class="c p"></i>passed, not flagged</span>
+  </div>
+  <div id="board"></div>
+  <p class="note">Each row is one day of the test period, and each shape is one production unit in time order. Hover or long-press a shape to see its time and rank.</p>
+</section>
+
+<p class="note">This board uses the test labels to show the trade-off. Choosing the number to flag by looking at it would be selecting on the test set, so treat it as an illustration: in real use, the flagging budget would be set in advance.</p>
+
+<h2 id="errors">7. Error analysis</h2>
+<ul>
+<li id="burst"></li>
+<li>On Oct 3, a day with no failures, the logistic model placed 12 of its top 32 flags. Its scores seem to partly follow day-level process conditions, not only single units.</li>
+<li>Its best catch was an isolated failure on Oct 15, ranked first of 314. Five failures ranked in the bottom half of its scores (ranks 180 to 295), so some failures are not visible in the sensors it uses.</li>
+<li>The forest ranked many failures moderately high but few at the very top, which is why it scores lower on PR-AUC and top-10% recall despite looking reasonable.</li>
+<li><b>Which sensors matter?</b> Across the five folds, 30 different sensors were chosen from 50 selections; none was chosen in all five and eight in at least three. The steadiest ones are near-duplicates (f430, f431, f434, f435 and f436 correlate at 0.91 to 1.00), so they carry about one signal. Two sensors in the final model (f129, f510) were never chosen in any fold.</li>
+</ul>
+
+<h2 id="limits">8. Limitations</h2>
+<ul>
+<li>Only 17 test failures, in about nine separate events, so every number is uncertain.</li>
+<li>The process drifts, so performance in a later period may differ.</li>
+<li>The sensors are anonymized: we can say which readings carried signal, not what they measure, and results show association, not cause.</li>
+<li>Cross-validation folds overlap, so the sensor stability above is probably optimistic.</li>
+<li>The forest and logistic regression used different numbers of sensors (100 and 10), so that comparison mixes model and setting.</li>
+<li>The test set was used once, so no tuning came from it; we did not test other model families such as gradient boosting.</li>
+</ul>
+
+<h2 id="repo">9. Repository and reproducibility</h2>
+<p>Code, notebook, exact split, full results and the README with setup and data-access steps: <a href="[repository link]">[repository link]</a>. The data are public at the UCI link above. The split is time-ordered: the first 60% of units by timestamp for training, the next 20% for validation, the last 20% for testing, with random seed 42.</p>
+
+<footer>
+<p>ES 335 course project. Team: [names and roll numbers].</p>
+<p><b>AI use.</b> We used Claude (Anthropic) for project planning, explanations of methods, code drafts and website drafting. We ran the code on the data ourselves and checked the results; details are in the README.</p>
+<p><b>References.</b> SECOM [Dataset]. UCI Machine Learning Repository, archive.ics.uci.edu/dataset/179/secom. Pedregosa et al. (2011), Scikit-learn: Machine Learning in Python, Journal of Machine Learning Research 12.</p>
+</footer>
+</main>
+<script>
+const D=[["2008-10-02 20:54",0,0.525056,0.072831],["2008-10-02 21:32",1,0.494504,0.078864],["2008-10-02 21:33",0,0.427765,0.123007],["2008-10-02 22:23",0,0.527758,0.098737],["2008-10-02 22:33",0,0.500836,0.100048],["2008-10-02 23:32",0,0.420735,0.049188],["2008-10-02 23:32",0,0.404122,0.050339],["2008-10-03 00:24",0,0.391646,0.075577],["2008-10-03 00:55",0,0.544005,0.080144],["2008-10-03 02:41",0,0.515142,0.090746],["2008-10-03 03:52",0,0.478651,0.091672],["2008-10-03 03:56",0,0.544796,0.07685],["2008-10-03 04:49",0,0.579885,0.07936],["2008-10-03 05:01",0,0.573469,0.122221],["2008-10-03 05:45",0,0.464666,0.147826],["2008-10-03 06:15",0,0.492154,0.025861],["2008-10-03 08:35",0,0.466473,0.085275],["2008-10-03 09:30",0,0.342983,0.071412],["2008-10-03 11:40",0,0.346832,0.115567],["2008-10-03 12:31",0,0.392448,0.062324],["2008-10-03 18:45",0,0.589421,0.077039],["2008-10-03 19:23",0,0.551645,0.18708],["2008-10-03 19:23",0,0.516255,0.134769],["2008-10-03 20:11",0,0.508865,0.152449],["2008-10-03 20:26",0,0.567058,0.139268],["2008-10-03 20:35",0,0.653412,0.067853],["2008-10-03 20:46",0,0.298019,0.082337],["2008-10-03 21:15",0,0.448703,0.157779],["2008-10-03 21:52",0,0.408857,0.081273],["2008-10-03 22:08",0,0.347156,0.07796],["2008-10-03 22:53",0,0.503622,0.119688],["2008-10-03 23:46",0,0.378588,0.032028],["2008-10-04 00:58",0,0.496998,0.110538],["2008-10-04 01:49",0,0.379593,0.087657],["2008-10-04 02:36",0,0.409595,0.055281],["2008-10-04 03:53",0,0.322456,0.06463],["2008-10-04 04:12",0,0.41208,0.127628],["2008-10-04 04:45",0,0.372583,0.05443],["2008-10-04 09:29",0,0.319329,0.072035],["2008-10-04 15:16",0,0.521644,0.156915],["2008-10-04 16:58",0,0.386381,0.129649],["2008-10-04 18:15",0,0.351217,0.063322],["2008-10-04 18:25",0,0.419702,0.063879],["2008-10-04 18:59",0,0.400279,0.040947],["2008-10-04 19:12",0,0.506309,0.060935],["2008-10-04 19:47",0,0.436283,0.083026],["2008-10-04 19:54",0,0.353958,0.077697],["2008-10-04 20:39",0,0.297883,0.043807],["2008-10-04 22:06",0,0.278594,0.065839],["2008-10-04 23:18",1,0.330178,0.072245],["2008-10-05 00:33",1,0.483095,0.109878],["2008-10-05 00:33",0,0.498417,0.124127],["2008-10-05 01:35",0,0.384688,0.088453],["2008-10-05 04:01",0,0.397427,0.161274],["2008-10-05 04:20",0,0.528587,0.139056],["2008-10-05 04:48",0,0.417095,0.045453],["2008-10-05 05:31",0,0.425319,0.056981],["2008-10-05 05:53",0,0.450955,0.063465],["2008-10-05 06:15",0,0.414162,0.027202],["2008-10-05 08:02",0,0.39283,0.117643],["2008-10-05 08:40",0,0.414019,0.099169],["2008-10-05 09:04",0,0.435554,0.047056],["2008-10-05 09:47",0,0.441621,0.034336],["2008-10-05 10:00",0,0.365351,0.080444],["2008-10-05 10:43",0,0.417415,0.008264],["2008-10-05 11:05",0,0.341719,0.076114],["2008-10-05 11:30",0,0.405623,0.083163],["2008-10-05 12:03",0,0.392473,0.135396],["2008-10-05 12:17",0,0.441479,0.074194],["2008-10-05 13:49",0,0.442783,0.051831],["2008-10-05 14:34",0,0.409516,0.102366],["2008-10-05 15:30",1,0.441353,0.116693],["2008-10-05 15:35",1,0.514132,0.108113],["2008-10-05 16:15",0,0.491368,0.225737],["2008-10-05 16:37",1,0.626222,0.094158],["2008-10-05 16:49",1,0.578981,0.103079],["2008-10-05 18:46",1,0.369814,0.093856],["2008-10-05 18:59",0,0.368153,0.07945],["2008-10-05 19:45",0,0.374547,0.060822],["2008-10-05 20:12",0,0.322268,0.106045],["2008-10-05 20:30",0,0.385128,0.213739],["2008-10-05 22:13",0,0.293122,0.063141],["2008-10-06 00:41",0,0.367831,0.042435],["2008-10-06 01:25",0,0.496736,0.074964],["2008-10-06 01:27",0,0.405115,0.103446],["2008-10-06 01:30",0,0.295198,0.065608],["2008-10-06 02:44",0,0.317726,0.062378],["2008-10-06 02:49",0,0.368142,0.039355],["2008-10-06 03:31",0,0.323933,0.084675],["2008-10-06 03:50",1,0.356765,0.051544],["2008-10-06 03:57",1,0.401351,0.067657],["2008-10-06 04:26",0,0.527269,0.195547],["2008-10-06 05:21",0,0.446311,0.078159],["2008-10-06 05:24",0,0.404278,0.111424],["2008-10-06 06:11",0,0.472998,0.084902],["2008-10-06 06:26",0,0.416647,0.07061],["2008-10-06 06:49",0,0.437603,0.031626],["2008-10-06 07:12",0,0.428469,0.042918],["2008-10-06 07:17",0,0.505756,0.093882],["2008-10-06 07:35",0,0.381003,0.037826],["2008-10-06 07:38",0,0.458091,0.079168],["2008-10-06 08:24",0,0.322881,0.044432],["2008-10-06 08:57",0,0.374776,0.035568],["2008-10-06 09:11",0,0.575118,0.099932],["2008-10-06 09:57",0,0.342903,0.04169],["2008-10-06 10:07",0,0.420111,0.036368],["2008-10-06 11:51",0,0.401222,0.074651],["2008-10-06 12:39",0,0.400846,0.041069],["2008-10-06 12:42",0,0.347816,0.14245],["2008-10-06 13:08",0,0.456668,0.071612],["2008-10-06 13:38",1,0.457792,0.168877],["2008-10-06 13:55",1,0.554805,0.123338],["2008-10-06 15:00",1,0.396392,0.138865],["2008-10-06 15:01",0,0.464655,0.053691],["2008-10-06 15:52",0,0.418381,0.034006],["2008-10-06 16:42",0,0.395456,0.055402],["2008-10-06 16:50",0,0.379169,0.044678],["2008-10-06 17:26",0,0.357715,0.06066],["2008-10-06 17:26",0,0.368495,0.053832],["2008-10-06 17:35",0,0.34187,0.033098],["2008-10-06 18:54",0,0.324059,0.046845],["2008-10-06 18:55",0,0.484392,0.143497],["2008-10-06 19:42",0,0.385525,0.057059],["2008-10-06 20:02",0,0.345601,0.074525],["2008-10-06 20:36",0,0.445858,0.052763],["2008-10-06 20:47",0,0.376187,0.032661],["2008-10-06 21:46",0,0.304434,0.115711],["2008-10-06 21:48",0,0.303227,0.047618],["2008-10-06 22:37",0,0.405431,0.073435],["2008-10-06 23:03",0,0.410206,0.036808],["2008-10-07 01:46",0,0.308802,0.066753],["2008-10-07 03:29",0,0.267935,0.072533],["2008-10-07 03:39",0,0.436947,0.049056],["2008-10-07 07:32",0,0.43724,0.129993],["2008-10-07 07:41",0,0.302896,0.090137],["2008-10-07 08:25",0,0.397684,0.047419],["2008-10-07 08:26",0,0.439077,0.067038],["2008-10-07 09:11",0,0.484784,0.104394],["2008-10-07 09:20",0,0.416057,0.047015],["2008-10-07 09:59",0,0.3967,0.038892],["2008-10-07 10:04",0,0.422058,0.038772],["2008-10-07 10:10",0,0.417265,0.065935],["2008-10-07 10:51",0,0.455886,0.06699],["2008-10-07 11:15",0,0.343875,0.126197],["2008-10-07 11:16",0,0.53323,0.241165],["2008-10-07 11:36",0,0.358631,0.097946],["2008-10-07 12:40",0,0.429465,0.057882],["2008-10-07 13:10",1,0.502007,0.13932],["2008-10-07 13:48",0,0.425313,0.141277],["2008-10-07 14:35",0,0.348271,0.166966],["2008-10-07 16:32",0,0.395375,0.101797],["2008-10-07 17:06",0,0.375994,0.135801],["2008-10-07 17:28",0,0.394382,0.054471],["2008-10-07 18:39",0,0.354461,0.098359],["2008-10-07 19:24",0,0.455564,0.050921],["2008-10-07 20:19",0,0.459223,0.099555],["2008-10-07 20:39",0,0.257632,0.135168],["2008-10-07 20:48",0,0.405365,0.101316],["2008-10-08 04:47",0,0.41466,0.069774],["2008-10-08 05:35",0,0.321195,0.05146],["2008-10-08 05:38",0,0.320925,0.026677],["2008-10-08 06:25",0,0.430036,0.073758],["2008-10-08 07:10",0,0.293421,0.018753],["2008-10-08 07:13",0,0.272729,0.059856],["2008-10-08 07:16",0,0.437197,0.094614],["2008-10-08 09:01",0,0.259802,0.099388],["2008-10-08 09:06",0,0.295926,0.060941],["2008-10-08 10:37",0,0.294283,0.055032],["2008-10-08 12:11",0,0.359811,0.044257],["2008-10-08 13:35",0,0.445552,0.080733],["2008-10-08 13:38",0,0.427498,0.082026],["2008-10-08 14:48",0,0.406596,0.06533],["2008-10-08 15:37",0,0.392561,0.11457],["2008-10-08 16:26",0,0.416169,0.087465],["2008-10-08 17:14",0,0.331311,0.168903],["2008-10-08 17:31",0,0.345822,0.097003],["2008-10-08 17:41",0,0.368455,0.071713],["2008-10-08 18:22",0,0.271723,0.07932],["2008-10-08 20:27",0,0.373503,0.161889],["2008-10-08 21:19",0,0.33275,0.054601],["2008-10-08 21:45",0,0.272478,0.026065],["2008-10-08 22:08",0,0.386346,0.108468],["2008-10-08 23:13",0,0.457992,0.181318],["2008-10-08 23:50",0,0.443793,0.110736],["2008-10-09 00:23",0,0.41021,0.067944],["2008-10-09 04:34",1,0.280815,0.070416],["2008-10-09 06:06",0,0.375002,0.026796],["2008-10-09 07:38",0,0.390863,0.086041],["2008-10-09 14:15",0,0.378605,0.05285],["2008-10-09 15:04",0,0.32962,0.037028],["2008-10-09 15:55",1,0.378545,0.078015],["2008-10-09 15:56",0,0.395612,0.07823],["2008-10-10 10:05",0,0.448281,0.077855],["2008-10-10 10:46",0,0.399388,0.051008],["2008-10-10 10:53",0,0.400261,0.111386],["2008-10-10 12:30",0,0.361548,0.027636],["2008-10-10 15:33",0,0.395249,0.093365],["2008-10-10 15:50",0,0.42396,0.083968],["2008-10-10 20:02",0,0.328318,0.041288],["2008-10-10 21:03",0,0.494242,0.088747],["2008-10-10 21:07",0,0.25529,0.120071],["2008-10-10 21:16",0,0.348872,0.028489],["2008-10-11 02:55",0,0.331027,0.064705],["2008-10-11 06:56",0,0.400831,0.110363],["2008-10-11 07:38",0,0.308948,0.077418],["2008-10-11 07:39",0,0.404617,0.209418],["2008-10-11 07:42",0,0.412353,0.078631],["2008-10-11 08:27",0,0.476169,0.073903],["2008-10-11 14:43",0,0.376307,0.064707],["2008-10-11 15:33",0,0.267052,0.058848],["2008-10-11 16:25",0,0.232028,0.053001],["2008-10-11 23:16",0,0.177162,0.025825],["2008-10-11 23:58",0,0.246395,0.04612],["2008-10-12 00:57",0,0.298097,0.069766],["2008-10-12 01:50",0,0.433003,0.068282],["2008-10-12 02:59",0,0.270538,0.034985],["2008-10-12 03:21",0,0.381073,0.079933],["2008-10-12 03:28",0,0.372116,0.085798],["2008-10-12 08:19",0,0.314831,0.066869],["2008-10-12 18:47",0,0.438181,0.056654],["2008-10-13 03:34",0,0.314021,0.035429],["2008-10-13 03:53",0,0.39795,0.061456],["2008-10-13 11:27",0,0.358299,0.050505],["2008-10-13 12:18",0,0.373888,0.086764],["2008-10-13 14:06",0,0.363153,0.05698],["2008-10-13 14:29",0,0.361964,0.081203],["2008-10-13 14:30",0,0.375141,0.062149],["2008-10-13 14:55",0,0.333144,0.028874],["2008-10-13 15:42",0,0.357111,0.074534],["2008-10-13 15:42",0,0.335193,0.083225],["2008-10-13 16:13",0,0.329858,0.009211],["2008-10-13 19:17",0,0.392907,0.066867],["2008-10-13 19:36",0,0.425766,0.077552],["2008-10-13 19:40",0,0.300036,0.050837],["2008-10-13 20:10",0,0.430052,0.133191],["2008-10-13 20:30",0,0.37662,0.071638],["2008-10-13 20:53",0,0.630992,0.188445],["2008-10-13 21:20",0,0.371445,0.046854],["2008-10-13 21:47",0,0.415537,0.05253],["2008-10-13 21:57",0,0.373127,0.050485],["2008-10-13 22:48",0,0.240495,0.045056],["2008-10-13 22:54",0,0.35014,0.057912],["2008-10-14 00:35",0,0.293363,0.068403],["2008-10-14 03:21",0,0.333682,0.063246],["2008-10-14 03:28",0,0.414848,0.085589],["2008-10-14 03:35",0,0.247131,0.097145],["2008-10-14 13:13",0,0.37024,0.083875],["2008-10-14 13:16",0,0.353412,0.079445],["2008-10-14 14:07",0,0.391497,0.051691],["2008-10-14 14:15",0,0.234665,0.077738],["2008-10-14 14:43",0,0.288856,0.167701],["2008-10-14 17:36",0,0.308128,0.062597],["2008-10-14 19:15",0,0.357939,0.090431],["2008-10-14 20:01",0,0.347687,0.126547],["2008-10-14 20:30",0,0.490132,0.074131],["2008-10-14 20:48",0,0.392961,0.030204],["2008-10-14 21:36",0,0.387035,0.063147],["2008-10-14 23:07",0,0.381662,0.069027],["2008-10-15 00:03",0,0.35818,0.060531],["2008-10-15 00:27",0,0.344029,0.02645],["2008-10-15 00:47",0,0.525084,0.188417],["2008-10-15 01:52",0,0.298344,0.023811],["2008-10-15 01:52",0,0.415649,0.111046],["2008-10-15 01:52",0,0.34859,0.047446],["2008-10-15 02:40",0,0.395005,0.08071],["2008-10-15 02:40",0,0.444286,0.074731],["2008-10-15 02:42",1,0.740035,0.130614],["2008-10-15 03:24",0,0.28103,0.098995],["2008-10-15 04:08",0,0.367921,0.094264],["2008-10-15 05:13",0,0.453216,0.094474],["2008-10-15 05:16",0,0.297726,0.116476],["2008-10-15 06:49",0,0.296406,0.058526],["2008-10-15 07:36",0,0.363211,0.033757],["2008-10-15 07:55",0,0.298183,0.048933],["2008-10-15 08:21",0,0.300507,0.068736],["2008-10-15 09:11",0,0.503121,0.094727],["2008-10-15 10:00",0,0.270329,0.044],["2008-10-15 12:53",0,0.34221,0.058028],["2008-10-15 13:14",0,0.389221,0.041307],["2008-10-15 13:16",0,0.343745,0.092035],["2008-10-15 14:08",0,0.331754,0.06496],["2008-10-15 15:11",0,0.279546,0.043391],["2008-10-15 16:24",0,0.357033,0.061816],["2008-10-15 17:19",0,0.379508,0.027124],["2008-10-15 18:16",0,0.295299,0.068766],["2008-10-15 19:15",0,0.356336,0.088631],["2008-10-15 19:24",0,0.410985,0.071665],["2008-10-15 21:44",0,0.427724,0.083987],["2008-10-15 22:45",0,0.366318,0.049266],["2008-10-15 22:54",0,0.466405,0.131994],["2008-10-15 23:00",0,0.332996,0.068245],["2008-10-15 23:45",0,0.376226,0.06294],["2008-10-16 02:16",0,0.450744,0.056828],["2008-10-16 02:16",0,0.421243,0.061514],["2008-10-16 02:17",0,0.407988,0.040283],["2008-10-16 02:22",0,0.311409,0.057616],["2008-10-16 02:55",0,0.31113,0.050193],["2008-10-16 03:56",0,0.416153,0.094162],["2008-10-16 04:02",0,0.495976,0.056119],["2008-10-16 04:02",0,0.335429,0.072297],["2008-10-16 04:04",0,0.314709,0.053869],["2008-10-16 04:47",0,0.484039,0.067861],["2008-10-16 04:50",0,0.405909,0.120452],["2008-10-16 04:54",0,0.38216,0.056231],["2008-10-16 05:08",0,0.38622,0.072007],["2008-10-16 05:13",0,0.332637,0.031885],["2008-10-16 05:44",0,0.388013,0.036945],["2008-10-16 05:58",0,0.312403,0.051743],["2008-10-16 15:02",0,0.437655,0.07593],["2008-10-16 15:13",0,0.475109,0.102005],["2008-10-16 20:49",0,0.272417,0.07655],["2008-10-17 05:26",0,0.434372,0.120761],["2008-10-17 06:01",0,0.477808,0.09977],["2008-10-17 06:07",0,0.478568,0.07849]];
+const n=D.length;let P=0;D.forEach(r=>{P+=r[1]});const base=P/n;
+const col={lr:2,rf:3};const rank={};
+for(const k in col){const c=col[k];const idx=D.map((_,i)=>i).sort((a,b)=>D[b][c]-D[a][c]||a-b);const r=new Array(n);idx.forEach((i,j)=>{r[i]=j});rank[k]=r}
+let model='lr',N=32;
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const fmt=d=>{const p=d.split('-');return MON[+p[1]-1]+' '+(+p[2])};
+const days=[],byDay={};
+D.forEach((r,i)=>{const d=r[0].slice(0,10);if(!byDay[d]){byDay[d]=[];days.push(d)}byDay[d].push(i)});
+const board=document.getElementById('board'),cells=new Array(n),sums={};
+days.forEach(d=>{
+  const row=document.createElement('div');row.className='day';
+  const lab=document.createElement('div');lab.className='dl';lab.textContent=fmt(d);
+  const cw=document.createElement('div');cw.className='cells';
+  byDay[d].forEach(i=>{const c=document.createElement('span');c.className='c';cells[i]=c;cw.appendChild(c)});
+  const s=document.createElement('div');s.className='ds';sums[d]=s;
+  row.append(lab,cw,s);board.appendChild(row);
+});
+const $=id=>document.getElementById(id);
+function render(){
+  const r=rank[model];let tp=0,fp=0;const dd={};
+  days.forEach(d=>{dd[d]={fl:0,hit:0,fail:0}});
+  for(let i=0;i<n;i++){
+    const f=r[i]<N,y=D[i][1],d=D[i][0].slice(0,10);
+    if(f){y?tp++:fp++;dd[d].fl++;if(y)dd[d].hit++}
+    if(y)dd[d].fail++;
+    cells[i].className='c '+(y?'f':'p')+(f?' on':'');
+    cells[i].title=D[i][0].slice(5,16).replace('-','/')+', '+(y?'failed':'passed')+', rank '+(r[i]+1)+' of '+n;
+  }
+  const fn=P-tp,tn=n-P-fp;
+  $('nv').textContent=N;$('n').value=N;
+  $('s-rec').textContent=tp+' of '+P;
+  $('s-prec').textContent=N?Math.round(100*tp/N)+'%':'n/a';
+  $('s-fa').textContent=fp;
+  $('s-lift').textContent=N?(tp/N/base).toFixed(1)+'×':'n/a';
+  $('c-tp').textContent=tp;$('c-fn').textContent=fn;$('c-fp').textContent=fp;$('c-tn').textContent=tn;
+  days.forEach(d=>{const x=dd[d];
+    sums[d].textContent=x.fail?(x.fl+' flagged, '+x.hit+' of '+x.fail+(x.fail>1?' failures':' failure')+' caught'):(x.fl+' flagged, no failures');});
+  $('m-lr').setAttribute('aria-pressed',model==='lr');$('m-rf').setAttribute('aria-pressed',model==='rf');
+}
+$('n').addEventListener('input',e=>{N=+e.target.value;render()});
+$('m-lr').onclick=()=>{model='lr';render()};$('m-rf').onclick=()=>{model='rf';render()};
+document.querySelectorAll('#presets button').forEach(b=>b.onclick=()=>{N=+b.dataset.n;render()});
+const fc=days.map(d=>({d:d,f:byDay[d].reduce((a,i)=>a+D[i][1],0)})).sort((a,b)=>b.f-a.f);
+$('burst').textContent=(fc[0].f+fc[1].f)+' of the '+P+' failures fall on just two days ('+fmt(fc[0].d)+' and '+fmt(fc[1].d)+'). Failures arrive in bursts, so the number of independent events is smaller than '+P+'.';
+$('ntot').textContent=n;$('n').max=n;
+render();
+</script>
+</body>
+</html>
